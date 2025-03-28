@@ -3,8 +3,11 @@ package grpc
 import (
 	"context"
 	pe "github.com/flowXM/proto-exchange/exchange"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gw-exchanger/internal/storages"
 	"gw-exchanger/internal/storages/postgres"
+	"gw-exchanger/pkg/logger"
 )
 
 type ExchangeServiceServer struct {
@@ -15,7 +18,8 @@ func (e *ExchangeServiceServer) GetExchangeRates(context.Context, *pe.Empty) (*p
 	cr := postgres.NewCurrencyRepository()
 	exchangeRates, err := cr.GetExchangeRates()
 	if err != nil {
-		return nil, err
+		logger.Log.Error("gRPC", "error", err)
+		return &pe.ExchangeRatesResponse{}, status.Error(codes.Internal, "")
 	}
 	var mp = make(map[string]float32)
 
@@ -32,7 +36,8 @@ func (e *ExchangeServiceServer) GetExchangeRateForCurrency(ctx context.Context, 
 	cr := postgres.NewCurrencyRepository()
 	exchangeRate, err := cr.GetExchangeRateForCurrency(storages.Currency(request.FromCurrency), storages.Currency(request.ToCurrency))
 	if err != nil {
-		return nil, err
+		logger.Log.Error("gRPC", "error", err)
+		return &pe.ExchangeRateResponse{}, status.Error(codes.Internal, "")
 	}
 
 	return &pe.ExchangeRateResponse{

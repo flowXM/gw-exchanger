@@ -23,7 +23,7 @@ func NewClient() (*sql.DB, error) {
 		return nil, err
 	}
 
-	logger.Log.Info("Successfully connected to DB")
+	logger.Log.Info("Successfully connected to DB", err)
 
 	return db, nil
 }
@@ -33,9 +33,10 @@ func DoWithRetries(fn func() (*sql.DB, error), attempts int) (*sql.DB, error) {
 	var err error
 	for attempt := 1; attempt <= attempts; attempt++ {
 		logger.Log.Info("Trying connect to DB", "attempt", attempt)
-		db, err = fn()
+		db, _ = fn()
+		err = db.Ping()
 		if err != nil {
-			time.Sleep(time.Second * 2)
+			time.Sleep(time.Millisecond * 5)
 			continue
 		}
 
